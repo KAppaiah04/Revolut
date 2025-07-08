@@ -319,11 +319,8 @@
             </div>
         </div>
 
-        <div id="typingIndicator" class="typing-indicator" style="display: none;">
-            <div class="typing-dot"></div>
-            <div class="typing-dot"></div>
-            <div class="typing-dot"></div>
-        </div>
+        <!-- Add missing loading indicator -->
+        <div class="loading-indicator" id="loadingIndicator" style="display:none; text-align:center; color:#666; margin:10px 0;">Typing...</div>
 
         <div class="chat-input-area">
             <input type="text" id="chatInput" class="chat-input" placeholder="Type your message...">
@@ -490,9 +487,8 @@
             userMessageDiv.className = 'chat-message user';
             userMessageDiv.innerHTML = `<div class="chat-bubble user">${message}</div>`;
             chatArea.appendChild(userMessageDiv);
-
-            chatInput.value = ''; // Clear input
-            chatArea.scrollTop = chatArea.scrollHeight; // Scroll to bottom
+            chatInput.value = '';
+            chatArea.scrollTop = chatArea.scrollHeight;
 
             // Show loading indicator
             loadingIndicator.style.display = 'block';
@@ -503,7 +499,6 @@
             const isHighRiskOrDirectEscalation = keywords.some(keyword => lowerCaseMessage.includes(keyword));
 
             if (isHighRiskOrDirectEscalation) {
-                // More empathetic and action-oriented message for high-risk scenarios
                 setTimeout(() => {
                     const systemEscalationMessage = document.createElement('div');
                     systemEscalationMessage.className = 'chat-message system';
@@ -512,25 +507,19 @@
                     </div>`;
                     chatArea.appendChild(systemEscalationMessage);
                     chatArea.scrollTop = chatArea.scrollHeight;
-                    loadingIndicator.style.display = 'none'; // Hide loading after system message
+                    loadingIndicator.style.display = 'none';
                 }, 1000);
-
-                // Show confirmation message after a short delay
                 setTimeout(() => {
-                    showEscalationConfirmation(isHighRiskOrDirectEscalation); // Pass flag to potentially change message box style
-                }, 2500); // Give time for the system message to appear first
-
+                    showEscalationConfirmation(isHighRiskOrDirectEscalation);
+                }, 2500);
             } else {
                 // Prepare the prompt for Gemini API for a more relevant and concise response
                 const systemInstruction = `You are a helpful, very concise, and empathetic virtual assistant for Revolut support, assisting users like Margaret (an older adult who prefers simple, direct answers and human help). If you cannot provide a very simple, immediate solution, or if the user seems confused, gently suggest speaking to a human. Keep responses extremely brief, ideally one to two sentences.`;
                 let chatHistory = [];
-                // Add the system instruction as the first message
                 chatHistory.push({ role: "user", parts: [{ text: systemInstruction + " User query: " + message }] });
-
                 const payload = { contents: chatHistory };
                 const apiKey = ""; // Canvas will automatically provide the API key
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
                 try {
                     const response = await fetch(apiUrl, {
                         method: 'POST',
@@ -538,23 +527,18 @@
                         body: JSON.stringify(payload)
                     });
                     const result = await response.json();
-
-                    let llmResponseText = "I'm sorry, I couldn't process that. Would you like to speak to a human instead?"; // More direct fallback
+                    let llmResponseText = "I'm sorry, I couldn't process that. Would you like to speak to a human instead?";
                     if (result.candidates && result.candidates.length > 0 &&
                         result.candidates[0].content && result.candidates[0].content.parts &&
                         result.candidates[0].content.parts.length > 0) {
                         llmResponseText = result.candidates[0].content.parts[0].text;
                     }
-
-                    // Add LLM response to chat
                     const systemResponseDiv = document.createElement('div');
                     systemResponseDiv.className = 'chat-message system';
                     systemResponseDiv.innerHTML = `<div class="chat-bubble system">${llmResponseText}</div>`;
                     chatArea.appendChild(systemResponseDiv);
                     chatArea.scrollTop = chatArea.scrollHeight;
-
                 } catch (error) {
-                    console.error("Error calling Gemini API:", error);
                     const errorMessageDiv = document.createElement('div');
                     errorMessageDiv.className = 'chat-message system';
                     errorMessageDiv.innerHTML = `<div class="chat-bubble system">
@@ -563,7 +547,7 @@
                     chatArea.appendChild(errorMessageDiv);
                     chatArea.scrollTop = chatArea.scrollHeight;
                 } finally {
-                    loadingIndicator.style.display = 'none'; // Hide loading indicator
+                    loadingIndicator.style.display = 'none';
                 }
             }
         }
