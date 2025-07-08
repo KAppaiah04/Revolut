@@ -322,16 +322,16 @@
         <!-- Add missing loading indicator -->
         <div class="loading-indicator" id="loadingIndicator" style="display:none; text-align:center; color:#666; margin:10px 0;">Typing...</div>
 
-        <div class="chat-input-area">
-            <input type="text" id="chatInput" class="chat-input" placeholder="Type your message...">
-            <label for="fileUpload" class="file-upload-btn">
+        <form class="chat-input-area" id="chatForm" onsubmit="event.preventDefault(); sendMessage();" style="gap:16px; margin-top:10px;">
+            <input type="text" id="chatInput" class="chat-input" placeholder="Type your message..." style="font-size:1.5rem; padding:18px 24px; border-radius:16px; min-height:56px;" autocomplete="off">
+            <label for="fileUpload" class="file-upload-btn" style="font-size:1.5rem;">
                 <i class="fas fa-paperclip"></i>
                 <input type="file" id="fileUpload" class="visually-hidden" onchange="handleFileUpload(event)">
             </label>
-            <button class="send-button" onclick="sendMessage()">
+            <button type="submit" class="send-button" style="font-size:1.5rem; min-height:56px; padding:16px 28px;">
                 <i class="fas fa-paper-plane"></i>
             </button>
-        </div>
+        </form>
 
         <button id="escalateButton" class="button-primary" onclick="showEscalationConfirmation()">
             Speak to a Human
@@ -479,26 +479,41 @@
             const chatArea = document.getElementById('chatArea');
             const loadingIndicator = document.getElementById('loadingIndicator');
             const message = chatInput.value.trim();
-
             if (message === "") return;
-
             // Add user message to chat
             const userMessageDiv = document.createElement('div');
             userMessageDiv.className = 'chat-message user';
-            userMessageDiv.innerHTML = `<div class="chat-bubble user">${message}</div>`;
+            userMessageDiv.innerHTML = `<div class="chat-bubble user" style="font-size:1.5rem;">${message}</div>`;
             chatArea.appendChild(userMessageDiv);
             chatInput.value = '';
             chatArea.scrollTop = chatArea.scrollHeight;
-
-            // Show loading indicator
             loadingIndicator.style.display = 'block';
-
-            // Simulate NLP detection and auto-escalation (keep for direct triggers)
+            // High-risk keywords
             const keywords = ["scam", "fraud", "panic", "stolen", "worried", "distress", "help me", "human", "person", "talk to someone"];
             const lowerCaseMessage = message.toLowerCase();
             const isHighRiskOrDirectEscalation = keywords.some(keyword => lowerCaseMessage.includes(keyword));
-
-            if (isHighRiskOrDirectEscalation) {
+            // Simple queries AI can answer directly
+            const simpleAnswers = {
+                'check my balance': "Your current balance is £1,250.00. If you need a statement or more details, let me know!",
+                'balance': "Your current balance is £1,250.00. If you need a statement or more details, let me know!",
+                'recent transactions': "Here are your 3 most recent transactions:\n- Tesco: £32.10\n- Amazon: £15.99\n- Boots: £8.50",
+                'report an issue': "I'm here to help! Please describe the issue you're facing, and I'll do my best to assist you.",
+                'hello': "Hi Margaret! How can I assist you today?",
+                'hi': "Hello Margaret! What can I do for you today?",
+                'help': "I'm here to help! Please tell me more about your issue or question.",
+                'thank you': "You're welcome! If you have any more questions, feel free to ask.",
+                'thanks': "You're welcome! If you need further assistance, just let me know."
+            };
+            if (Object.keys(simpleAnswers).some(key => message.toLowerCase().includes(key))) {
+                setTimeout(() => {
+                    const systemResponseDiv = document.createElement('div');
+                    systemResponseDiv.className = 'chat-message system';
+                    systemResponseDiv.innerHTML = `<div class="chat-bubble system" style="font-size:1.5rem;">${simpleAnswers[Object.keys(simpleAnswers).find(key => message.toLowerCase().includes(key))]}</div>`;
+                    chatArea.appendChild(systemResponseDiv);
+                    chatArea.scrollTop = chatArea.scrollHeight;
+                    loadingIndicator.style.display = 'none';
+                }, 1000);
+            } else if (isHighRiskOrDirectEscalation) {
                 setTimeout(() => {
                     const systemEscalationMessage = document.createElement('div');
                     systemEscalationMessage.className = 'chat-message system';
