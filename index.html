@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revolut Support - Human Trust Layer</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5; /* Light grey background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            max-width: 600px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 2.25rem; /* Equivalent to 36px */
+            font-weight: 700;
+            color: #1a202c; /* Dark text */
+        }
+        .header p {
+            font-size: 1.125rem; /* Equivalent to 18px */
+            color: #4a5568; /* Medium grey text */
+        }
+        .button-primary {
+            background-color: #673AB7; /* Revolut-like purple */
+            color: #ffffff;
+            font-size: 1.25rem; /* Equivalent to 20px */
+            font-weight: 600;
+            padding: 16px 24px;
+            border-radius: 12px;
+            min-height: 48px; /* Buttons >= 48px tall */
+            width: 100%;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+        }
+        .button-primary:hover {
+            background-color: #512DA8; /* Darker purple on hover */
+        }
+        .message-box {
+            background-color: #e0f7fa; /* Light blue for confirmation */
+            border: 1px solid #b2ebf2;
+            color: #00796b; /* Dark teal text */
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 1.125rem; /* Equivalent to 18px */
+            line-height: 1.6;
+            display: none; /* Hidden by default */
+        }
+        .message-box.fraud-alert {
+            background-color: #ffe0b2; /* Light orange for alerts */
+            border-color: #ffb74d; /* Orange border */
+            color: #e65100; /* Dark orange text */
+            font-weight: 600;
+        }
+        .message-box strong {
+            color: #004d40; /* Even darker teal for emphasis */
+        }
+        .message-box.fraud-alert strong {
+            color: #bf360c; /* Darker orange for emphasis in alert */
+        }
+        .calm-mode-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            font-size: 1rem;
+            color: #4a5568;
+        }
+        .calm-mode-toggle input[type="checkbox"] {
+            transform: scale(1.5); /* Make checkbox larger */
+        }
+        .chat-area {
+            background-color: #f7fafc; /* Very light grey for chat background */
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+        }
+        .chat-message {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .chat-message.user {
+            justify-content: flex-end;
+        }
+        .chat-message.system {
+            justify-content: flex-start;
+        }
+        .chat-bubble {
+            max-width: 80%;
+            padding: 12px 18px;
+            border-radius: 18px;
+            font-size: 1.125rem; /* Equivalent to 18px */
+            line-height: 1.5;
+        }
+        .chat-bubble.user {
+            background-color: #673AB7; /* User message bubble */
+            color: #ffffff;
+            border-bottom-right-radius: 4px;
+        }
+        .chat-bubble.system {
+            background-color: #e2e8f0; /* System message bubble */
+            color: #2d3748;
+            border-bottom-left-radius: 4px;
+        }
+        .chat-input-area {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .chat-input {
+            flex-grow: 1;
+            padding: 12px 18px;
+            border-radius: 12px;
+            border: 1px solid #cbd5e0;
+            font-size: 1.125rem; /* Equivalent to 18px */
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+        .chat-input:focus {
+            border-color: #673AB7;
+        }
+        .send-button {
+            background-color: #673AB7;
+            color: #ffffff;
+            padding: 12px 20px;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            font-size: 1.125rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+        .send-button:hover {
+            background-color: #512DA8;
+        }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px 0;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%; /* Position above the text */
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.9rem;
+        }
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        .loading-indicator {
+            text-align: center;
+            font-style: italic;
+            color: #666;
+            margin-top: 10px;
+            display: none; /* Hidden by default */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="calm-mode-toggle">
+            <label for="calmMode">Enable Calm Mode (Larger Text, Simpler UI)</label>
+            <input type="checkbox" id="calmMode" onchange="toggleCalmMode()">
+        </div>
+
+        <div class="header">
+            <h1>Revolut Support</h1>
+            <p>How can we help you today, Margaret?</p>
+        </div>
+
+        <div class="chat-area" id="chatArea">
+            <!-- Initial system message -->
+            <div class="chat-message system">
+                <div class="chat-bubble">
+                    Hello Margaret, I'm your virtual assistant. How can I assist you?
+                </div>
+            </div>
+        </div>
+
+        <div class="loading-indicator" id="loadingIndicator">
+            Typing...
+        </div>
+
+        <div class="chat-input-area">
+            <input type="text" id="chatInput" class="chat-input" placeholder="Type your message...">
+            <button class="send-button" onclick="sendMessage()">Send</button>
+        </div>
+
+        <button id="escalateButton" class="button-primary" onclick="showEscalationConfirmation()">
+            Speak to a Human
+        </button>
+
+        <div id="confirmationMessage" class="message-box">
+            <p>Thanks, Margaret. A real person is reviewing this now. We’ll update you shortly.</p>
+            <p>You can expect a response from <strong>Agent Sarah</strong> within approximately <strong>5 minutes</strong>.</p>
+            <p>Would you like to schedule a callback instead? <a href="#" class="text-blue-700 font-semibold" onclick="showCallbackOptions(event)">Click here</a></p>
+        </div>
+
+        <!-- Callback Options Modal (hidden by default) -->
+        <div id="callbackModal" class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center p-4 hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm">
+                <h2 class="text-2xl font-bold mb-4 text-gray-800">Schedule a Callback</h2>
+                <p class="text-lg mb-6 text-gray-700">Choose your preferred callback option:</p>
+                <button class="button-primary mb-4" onclick="selectCallback('instant')">Instant Callback</button>
+                <button class="button-primary mb-6" onclick="selectCallback('scheduled')">Schedule for Later</button>
+                <button class="button-primary bg-gray-300 text-gray-800 hover:bg-gray-400" onclick="hideCallbackModal()">Cancel</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Function to toggle Calm Mode styles
+        function toggleCalmMode() {
+            const body = document.body;
+            const container = document.querySelector('.container');
+            const headerText = document.querySelector('.header h1');
+            const paragraphText = document.querySelector('.header p');
+            const chatMessages = document.querySelectorAll('.chat-bubble');
+            const chatInput = document.getElementById('chatInput');
+            const sendButton = document.querySelector('.send-button');
+            const escalateButton = document.getElementById('escalateButton');
+            const confirmationMessage = document.getElementById('confirmationMessage');
+            const calmModeCheckbox = document.getElementById('calmMode');
+
+            if (calmModeCheckbox.checked) {
+                // Apply Calm Mode styles
+                body.style.fontSize = '1.125rem'; /* Base font size 18px */
+                headerText.style.fontSize = '2.5rem'; /* Larger header */
+                paragraphText.style.fontSize = '1.25rem'; /* Larger paragraph */
+                chatMessages.forEach(msg => {
+                    msg.style.fontSize = '1.25rem'; /* Larger chat messages */
+                });
+                chatInput.style.fontSize = '1.25rem'; /* Larger input */
+                sendButton.style.fontSize = '1.25rem'; /* Larger send button */
+                escalateButton.style.fontSize = '1.5rem'; /* Larger escalate button */
+                escalateButton.style.padding = '20px 28px'; /* Larger padding */
+                confirmationMessage.style.fontSize = '1.25rem'; /* Larger confirmation text */
+
+                // Ensure buttons are at least 48px tall (handled by Tailwind classes and inline style for padding)
+                escalateButton.style.minHeight = '48px';
+                sendButton.style.minHeight = '48px';
+
+            } else {
+                // Revert to default styles
+                body.style.fontSize = ''; /* Revert to default */
+                headerText.style.fontSize = '2.25rem';
+                paragraphText.style.fontSize = '1.125rem';
+                chatMessages.forEach(msg => {
+                    msg.style.fontSize = '1.125rem';
+                });
+                chatInput.style.fontSize = '1.125rem';
+                sendButton.style.fontSize = '1.125rem';
+                escalateButton.style.fontSize = '1.25rem';
+                escalateButton.style.padding = '16px 24px';
+                confirmationMessage.style.fontSize = '1.125rem';
+            }
+        }
+
+        // Function to simulate sending a message and potential NLP trigger
+        async function sendMessage() {
+            const chatInput = document.getElementById('chatInput');
+            const chatArea = document.getElementById('chatArea');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const message = chatInput.value.trim();
+
+            if (message === "") return;
+
+            // Add user message to chat
+            const userMessageDiv = document.createElement('div');
+            userMessageDiv.className = 'chat-message user';
+            userMessageDiv.innerHTML = `<div class="chat-bubble user">${message}</div>`;
+            chatArea.appendChild(userMessageDiv);
+
+            chatInput.value = ''; // Clear input
+            chatArea.scrollTop = chatArea.scrollHeight; // Scroll to bottom
+
+            // Show loading indicator
+            loadingIndicator.style.display = 'block';
+
+            // Simulate NLP detection and auto-escalation (keep for direct triggers)
+            const keywords = ["scam", "fraud", "panic", "stolen", "worried", "distress", "help me", "human", "person", "talk to someone"];
+            const lowerCaseMessage = message.toLowerCase();
+            const isHighRiskOrDirectEscalation = keywords.some(keyword => lowerCaseMessage.includes(keyword));
+
+            if (isHighRiskOrDirectEscalation) {
+                // More empathetic and action-oriented message for high-risk scenarios
+                setTimeout(() => {
+                    const systemEscalationMessage = document.createElement('div');
+                    systemEscalationMessage.className = 'chat-message system';
+                    systemEscalationMessage.innerHTML = `<div class="chat-bubble system">
+                        Don't worry, Margaret. We understand this is important. We're immediately connecting you to a human agent who can help with this. Please wait a moment.
+                    </div>`;
+                    chatArea.appendChild(systemEscalationMessage);
+                    chatArea.scrollTop = chatArea.scrollHeight;
+                    loadingIndicator.style.display = 'none'; // Hide loading after system message
+                }, 1000);
+
+                // Show confirmation message after a short delay
+                setTimeout(() => {
+                    showEscalationConfirmation(isHighRiskOrDirectEscalation); // Pass flag to potentially change message box style
+                }, 2500); // Give time for the system message to appear first
+
+            } else {
+                // Prepare the prompt for Gemini API for a more relevant and concise response
+                const systemInstruction = `You are a helpful, very concise, and empathetic virtual assistant for Revolut support, assisting users like Margaret (an older adult who prefers simple, direct answers and human help). If you cannot provide a very simple, immediate solution, or if the user seems confused, gently suggest speaking to a human. Keep responses extremely brief, ideally one to two sentences.`;
+                let chatHistory = [];
+                // Add the system instruction as the first message
+                chatHistory.push({ role: "user", parts: [{ text: systemInstruction + " User query: " + message }] });
+
+                const payload = { contents: chatHistory };
+                const apiKey = ""; // Canvas will automatically provide the API key
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await response.json();
+
+                    let llmResponseText = "I'm sorry, I couldn't process that. Would you like to speak to a human instead?"; // More direct fallback
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        llmResponseText = result.candidates[0].content.parts[0].text;
+                    }
+
+                    // Add LLM response to chat
+                    const systemResponseDiv = document.createElement('div');
+                    systemResponseDiv.className = 'chat-message system';
+                    systemResponseDiv.innerHTML = `<div class="chat-bubble system">${llmResponseText}</div>`;
+                    chatArea.appendChild(systemResponseDiv);
+                    chatArea.scrollTop = chatArea.scrollHeight;
+
+                } catch (error) {
+                    console.error("Error calling Gemini API:", error);
+                    const errorMessageDiv = document.createElement('div');
+                    errorMessageDiv.className = 'chat-message system';
+                    errorMessageDiv.innerHTML = `<div class="chat-bubble system">
+                        I'm currently experiencing technical difficulties. Please try again later or click "Speak to a Human" for immediate assistance.
+                    </div>`;
+                    chatArea.appendChild(errorMessageDiv);
+                    chatArea.scrollTop = chatArea.scrollHeight;
+                } finally {
+                    loadingIndicator.style.display = 'none'; // Hide loading indicator
+                }
+            }
+        }
+
+        // Function to show the human escalation confirmation message
+        function showEscalationConfirmation(isFraudRelated = false) {
+            const confirmationMessage = document.getElementById('confirmationMessage');
+            confirmationMessage.style.display = 'block';
+            document.getElementById('escalateButton').style.display = 'none'; // Hide button after clicking
+
+            if (isFraudRelated) {
+                confirmationMessage.classList.add('fraud-alert');
+                confirmationMessage.innerHTML = `
+                    <p><strong>Urgent:</strong> We've detected a high-priority concern.</p>
+                    <p>A dedicated agent is now reviewing your case and will be in touch very shortly to help secure your account.</p>
+                    <p>You can expect a response from <strong>Agent Sarah</strong> within approximately <strong>5 minutes</strong>.</p>
+                    <p>Would you like to schedule a callback instead? <a href="#" class="text-blue-700 font-semibold" onclick="showCallbackOptions(event)">Click here</a></p>
+                `;
+            } else {
+                confirmationMessage.classList.remove('fraud-alert');
+                confirmationMessage.innerHTML = `
+                    <p>Thanks, Margaret. A real person is reviewing this now. We’ll update you shortly.</p>
+                    <p>You can expect a response from <strong>Agent Sarah</strong> within approximately <strong>5 minutes</strong>.</p>
+                    <p>Would you like to schedule a callback instead? <a href="#" class="text-blue-700 font-semibold" onclick="showCallbackOptions(event)">Click here</a></p>
+                `;
+            }
+        }
+
+        // Function to show the callback options modal
+        function showCallbackOptions(event) {
+            event.preventDefault(); // Prevent default link behavior
+            document.getElementById('callbackModal').classList.remove('hidden');
+        }
+
+        // Function to hide the callback options modal
+        function hideCallbackModal() {
+            document.getElementById('callbackModal').classList.add('hidden');
+        }
+
+        // Function to handle callback selection
+        function selectCallback(type) {
+            hideCallbackModal();
+            const chatArea = document.getElementById('chatArea');
+            const systemCallbackMessage = document.createElement('div');
+            systemCallbackMessage.className = 'chat-message system';
+            if (type === 'instant') {
+                systemCallbackMessage.innerHTML = `<div class="chat-bubble system">
+                    An agent will attempt an instant callback to your registered phone number shortly.
+                </div>`;
+            } else if (type === 'scheduled') {
+                systemCallbackMessage.innerHTML = `<div class="chat-bubble system">
+                    You've chosen to schedule a callback. An agent will contact you to arrange a suitable time.
+                </div>`;
+            }
+            chatArea.appendChild(systemCallbackMessage);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        // Add tooltips for terms like "chargeback", "hold", "verification"
+        // This is a basic example; for a real app, you'd parse content and apply dynamically.
+        window.onload = function() {
+            // Initial check for calm mode if it was previously enabled (not persistent in this prototype)
+            toggleCalmMode();
+
+            // Example of adding tooltips to existing text or dynamically generated text
+            const chatArea = document.getElementById('chatArea');
+            const initialMessage = chatArea.querySelector('.chat-bubble.system');
+            if (initialMessage) {
+                initialMessage.innerHTML += `<br><br>
+                    Need help with a <span class="tooltip">chargeback<span class="tooltiptext">A chargeback is when a customer disputes a transaction with their bank.</span></span>,
+                    a payment <span class="tooltip">hold<span class="tooltiptext">A temporary suspension of funds in your account.</span></span>,
+                    or <span class="tooltip">verification<span class="tooltiptext">The process of confirming your identity or transaction details.</span></span>?
+                `;
+            }
+        };
+    </script>
+</body>
+</html>
