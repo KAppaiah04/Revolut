@@ -480,7 +480,6 @@
             const loadingIndicator = document.getElementById('loadingIndicator');
             const message = chatInput.value.trim();
             if (message === "") return;
-            // Add user message to chat
             const userMessageDiv = document.createElement('div');
             userMessageDiv.className = 'chat-message user';
             userMessageDiv.innerHTML = `<div class="chat-bubble user" style="font-size:1.5rem;">${message}</div>`;
@@ -492,32 +491,45 @@
             const keywords = ["scam", "fraud", "panic", "stolen", "worried", "distress", "help me", "human", "person", "talk to someone"];
             const lowerCaseMessage = message.toLowerCase();
             const isHighRiskOrDirectEscalation = keywords.some(keyword => lowerCaseMessage.includes(keyword));
-            // Simple queries AI can answer directly
-            const simpleAnswers = {
-                'check my balance': "Your current balance is £1,250.00. If you need a statement or more details, let me know!",
-                'balance': "Your current balance is £1,250.00. If you need a statement or more details, let me know!",
-                'recent transactions': "Here are your 3 most recent transactions:\n- Tesco: £32.10\n- Amazon: £15.99\n- Boots: £8.50",
-                'report an issue': "I'm here to help! Please describe the issue you're facing, and I'll do my best to assist you.",
-                'hello': "Hi Margaret! How can I assist you today?",
-                'hi': "Hello Margaret! What can I do for you today?",
-                'help': "I'm here to help! Please tell me more about your issue or question.",
-                'thank you': "You're welcome! If you have any more questions, feel free to ask.",
-                'thanks': "You're welcome! If you need further assistance, just let me know."
-            };
-            if (Object.keys(simpleAnswers).some(key => message.toLowerCase().includes(key))) {
-                setTimeout(() => {
-                    const systemResponseDiv = document.createElement('div');
-                    systemResponseDiv.className = 'chat-message system';
-                    systemResponseDiv.innerHTML = `<div class="chat-bubble system" style="font-size:1.5rem;">${simpleAnswers[Object.keys(simpleAnswers).find(key => message.toLowerCase().includes(key))]}</div>`;
-                    chatArea.appendChild(systemResponseDiv);
-                    chatArea.scrollTop = chatArea.scrollHeight;
-                    loadingIndicator.style.display = 'none';
-                }, 1000);
-            } else if (isHighRiskOrDirectEscalation) {
+            // Expanded simple queries AI can answer directly (with partial/variant matching)
+            const simpleAnswers = [
+                { patterns: ["check my balance", "balance", "account balance", "how much money", "see my balance"], answer: "Your current balance is £1,250.00. If you need a statement or more details, let me know!" },
+                { patterns: ["recent transactions", "last transactions", "show my transactions", "transaction history", "spending"], answer: "Here are your 3 most recent transactions:<br>- Tesco: £32.10<br>- Amazon: £15.99<br>- Boots: £8.50" },
+                { patterns: ["report an issue", "problem", "something wrong", "raise an issue", "report problem"], answer: "I'm here to help! Please describe the issue you're facing, and I'll do my best to assist you." },
+                { patterns: ["statement", "bank statement", "send statement", "get statement"], answer: "You can download your statement from the app or I can send it to your email. Would you like that?" },
+                { patterns: ["hello", "hi", "hey"], answer: "Hello Margaret! How can I assist you today?" },
+                { patterns: ["help", "assist", "support"], answer: "I'm here to help! Please tell me more about your issue or question." },
+                { patterns: ["thank you", "thanks", "thankyou"], answer: "You're welcome! If you have any more questions, feel free to ask." },
+                { patterns: ["card lost", "lost card", "block card", "freeze card"], answer: "I'm sorry to hear that. I've blocked your card for safety. Would you like to order a replacement?" },
+                { patterns: ["reset pin", "forgot pin", "change pin"], answer: "You can reset your card PIN in the app under 'Cards' > 'Settings'. Need step-by-step help?" },
+                { patterns: ["contact support", "talk to support", "speak to support"], answer: "You can chat with me or click 'Speak to a Human' for a real person." },
+                // New: Security concern - account hacked
+                { patterns: ["account hacked", "hacked", "unauthorized access", "someone in my account", "compromised"], answer: "I'm very sorry to hear your account may be compromised. For your safety, I've temporarily locked your account and notified our security team. Please change your password immediately. Would you like to speak to a human agent now?" }
+            ];
+            let matched = false;
+            for (const entry of simpleAnswers) {
+                for (const pattern of entry.patterns) {
+                    if (lowerCaseMessage.includes(pattern)) {
+                        setTimeout(() => {
+                            const systemResponseDiv = document.createElement('div');
+                            systemResponseDiv.className = 'chat-message system';
+                            systemResponseDiv.innerHTML = `<div class="chat-bubble system" style="font-size:1.5rem;">${entry.answer}</div>`;
+                            chatArea.appendChild(systemResponseDiv);
+                            chatArea.scrollTop = chatArea.scrollHeight;
+                            loadingIndicator.style.display = 'none';
+                        }, 700);
+                        matched = true;
+                        break;
+                    }
+                }
+                if (matched) break;
+            }
+            if (matched) return;
+            if (isHighRiskOrDirectEscalation) {
                 setTimeout(() => {
                     const systemEscalationMessage = document.createElement('div');
                     systemEscalationMessage.className = 'chat-message system';
-                    systemEscalationMessage.innerHTML = `<div class="chat-bubble system">
+                    systemEscalationMessage.innerHTML = `<div class="chat-bubble system" style="font-size:1.5rem;">
                         Don't worry, Margaret. We understand this is important. We're immediately connecting you to a human agent who can help with this. Please wait a moment.
                     </div>`;
                     chatArea.appendChild(systemEscalationMessage);
@@ -548,16 +560,20 @@
                         result.candidates[0].content.parts.length > 0) {
                         llmResponseText = result.candidates[0].content.parts[0].text;
                     }
+                    // If Gemini's response is still not helpful, offer human escalation
+                    if (llmResponseText.toLowerCase().includes("sorry") || llmResponseText.toLowerCase().includes("human")) {
+                        llmResponseText += '<br><button class="button-primary mt-2" onclick="showEscalationConfirmation()">Speak to a Human</button>';
+                    }
                     const systemResponseDiv = document.createElement('div');
                     systemResponseDiv.className = 'chat-message system';
-                    systemResponseDiv.innerHTML = `<div class="chat-bubble system">${llmResponseText}</div>`;
+                    systemResponseDiv.innerHTML = `<div class="chat-bubble system" style="font-size:1.5rem;">${llmResponseText}</div>`;
                     chatArea.appendChild(systemResponseDiv);
                     chatArea.scrollTop = chatArea.scrollHeight;
                 } catch (error) {
                     const errorMessageDiv = document.createElement('div');
                     errorMessageDiv.className = 'chat-message system';
-                    errorMessageDiv.innerHTML = `<div class="chat-bubble system">
-                        I'm currently experiencing technical difficulties. Please try again later or click "Speak to a Human" for immediate assistance.
+                    errorMessageDiv.innerHTML = `<div class="chat-bubble system" style="font-size:1.5rem;">
+                        I'm currently experiencing technical difficulties. Please try again later or click \"Speak to a Human\" for immediate assistance.
                     </div>`;
                     chatArea.appendChild(errorMessageDiv);
                     chatArea.scrollTop = chatArea.scrollHeight;
