@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,27 +7,55 @@
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Add Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        :root {
+            --primary-color: #673AB7;
+            --primary-dark: #512DA8;
+            --text-primary: #1a202c;
+            --text-secondary: #4a5568;
+            --bg-primary: #f0f2f5;
+            --bg-secondary: #ffffff;
+            --chat-user: #673AB7;
+            --chat-system: #e2e8f0;
+        }
+
+        .dark-mode {
+            --primary-color: #9575CD;
+            --primary-dark: #7E57C2;
+            --text-primary: #e2e8f0;
+            --text-secondary: #cbd5e0;
+            --bg-primary: #1a202c;
+            --bg-secondary: #2d3748;
+            --chat-user: #9575CD;
+            --chat-system: #4a5568;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f0f2f5; /* Light grey background */
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
             padding: 20px;
+            transition: all 0.3s ease;
         }
+
         .container {
-            background-color: #ffffff;
+            background-color: var(--bg-secondary);
             border-radius: 16px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
             padding: 30px;
-            max-width: 600px;
+            max-width: 800px;
             width: 100%;
             display: flex;
             flex-direction: column;
             gap: 20px;
+            transition: all 0.3s ease;
         }
         .header {
             text-align: center;
@@ -120,96 +148,152 @@
             max-width: 80%;
             padding: 12px 18px;
             border-radius: 18px;
-            font-size: 1.125rem; /* Equivalent to 18px */
+            font-size: 1.125rem;
             line-height: 1.5;
+            position: relative;
         }
         .chat-bubble.user {
-            background-color: #673AB7; /* User message bubble */
+            background-color: var(--chat-user);
             color: #ffffff;
             border-bottom-right-radius: 4px;
         }
         .chat-bubble.system {
-            background-color: #e2e8f0; /* System message bubble */
-            color: #2d3748;
+            background-color: var(--chat-system);
+            color: var(--text-primary);
             border-bottom-left-radius: 4px;
         }
-        .chat-input-area {
+        .message-timestamp {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            text-align: right;
+        }
+        .quick-replies {
             display: flex;
-            gap: 10px;
+            gap: 8px;
+            flex-wrap: wrap;
             margin-top: 10px;
         }
-        .chat-input {
-            flex-grow: 1;
-            padding: 12px 18px;
-            border-radius: 12px;
-            border: 1px solid #cbd5e0;
-            font-size: 1.125rem; /* Equivalent to 18px */
-            outline: none;
-            transition: border-color 0.3s ease;
-        }
-        .chat-input:focus {
-            border-color: #673AB7;
-        }
-        .send-button {
-            background-color: #673AB7;
-            color: #ffffff;
-            padding: 12px 20px;
-            border-radius: 12px;
-            border: none;
+        .quick-reply-btn {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.875rem;
             cursor: pointer;
-            font-size: 1.125rem;
-            font-weight: 600;
-            transition: background-color 0.3s ease;
+            transition: all 0.3s ease;
+            border: 1px solid var(--primary-color);
         }
-        .send-button:hover {
-            background-color: #512DA8;
+        .quick-reply-btn:hover {
+            background-color: var(--primary-color);
+            color: #ffffff;
         }
-        .tooltip {
-            position: relative;
-            display: inline-block;
-            cursor: help;
+        .message-reactions {
+            display: flex;
+            gap: 4px;
+            margin-top: 4px;
         }
-        .tooltip .tooltiptext {
-            visibility: hidden;
-            width: 200px;
-            background-color: #333;
-            color: #fff;
+        .reaction-btn {
+            padding: 2px 6px;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            background-color: var(--bg-primary);
+            color: var(--text-secondary);
+            border: 1px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .reaction-btn:hover {
+            border-color: var(--primary-color);
+        }
+        .file-upload-area {
+            border: 2px dashed var(--primary-color);
+            border-radius: 12px;
+            padding: 20px;
             text-align: center;
-            border-radius: 6px;
-            padding: 8px 0;
-            position: absolute;
-            z-index: 1;
-            bottom: 125%; /* Position above the text */
-            left: 50%;
-            margin-left: -100px;
-            opacity: 0;
-            transition: opacity 0.3s;
-            font-size: 0.9rem;
-        }
-        .tooltip .tooltiptext::after {
-            content: "";
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            margin-left: -5px;
-            border-width: 5px;
-            border-style: solid;
-            border-color: #333 transparent transparent transparent;
-        }
-        .tooltip:hover .tooltiptext {
-            visibility: visible;
-            opacity: 1;
-        }
-        .loading-indicator {
-            text-align: center;
-            font-style: italic;
-            color: #666;
             margin-top: 10px;
-            display: none; /* Hidden by default */
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .file-upload-area:hover {
+            background-color: var(--bg-primary);
+        }
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 1.5rem;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        .theme-toggle:hover {
+            background-color: var(--bg-primary);
+        }
+        /* Accessibility improvements */
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            border: 0;
+        }
+        /* Sound notification toggle */
+        .sound-toggle {
+            position: absolute;
+            top: 20px;
+            right: 70px;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 1.5rem;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        .sound-toggle:hover {
+            background-color: var(--bg-primary);
+        }
+        /* Typing indicator */
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 8px 12px;
+            border-radius: 12px;
+            background-color: var(--bg-primary);
+            width: fit-content;
+        }
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--text-secondary);
+            border-radius: 50%;
+            animation: typing 1s infinite ease-in-out;
+        }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
         }
     </style>
 </head>
 <body>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode">
+        <i class="fas fa-moon"></i>
+    </button>
+    <button class="sound-toggle" onclick="toggleSound()" aria-label="Toggle sound notifications">
+        <i class="fas fa-volume-up"></i>
+    </button>
+
     <div class="container">
         <div class="calm-mode-toggle">
             <label for="calmMode">Enable Calm Mode (Larger Text, Simpler UI)</label>
@@ -222,21 +306,34 @@
         </div>
 
         <div class="chat-area" id="chatArea">
-            <!-- Initial system message -->
             <div class="chat-message system">
-                <div class="chat-bubble">
+                <div class="chat-bubble system">
                     Hello Margaret, I'm your virtual assistant. How can I assist you?
+                    <div class="quick-replies">
+                        <button class="quick-reply-btn" onclick="sendQuickReply('Check my balance')">Check my balance</button>
+                        <button class="quick-reply-btn" onclick="sendQuickReply('Recent transactions')">Recent transactions</button>
+                        <button class="quick-reply-btn" onclick="sendQuickReply('Report an issue')">Report an issue</button>
+                    </div>
                 </div>
+                <div class="message-timestamp">Just now</div>
             </div>
         </div>
 
-        <div class="loading-indicator" id="loadingIndicator">
-            Typing...
+        <div id="typingIndicator" class="typing-indicator" style="display: none;">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
         </div>
 
         <div class="chat-input-area">
             <input type="text" id="chatInput" class="chat-input" placeholder="Type your message...">
-            <button class="send-button" onclick="sendMessage()">Send</button>
+            <label for="fileUpload" class="file-upload-btn">
+                <i class="fas fa-paperclip"></i>
+                <input type="file" id="fileUpload" class="visually-hidden" onchange="handleFileUpload(event)">
+            </label>
+            <button class="send-button" onclick="sendMessage()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
         </div>
 
         <button id="escalateButton" class="button-primary" onclick="showEscalationConfirmation()">
@@ -262,7 +359,76 @@
 
     </div>
 
+    <audio id="messageSound" src="https://cdn.freesound.org/previews/573/573544_5674468-lq.mp3"></audio>
+
     <script>
+        let soundEnabled = true;
+        let isDarkMode = false;
+
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('dark-mode');
+            const themeIcon = document.querySelector('.theme-toggle i');
+            themeIcon.className = isDarkMode ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const soundIcon = document.querySelector('.sound-toggle i');
+            soundIcon.className = soundEnabled ? 'fas fa-volume-up' : 'fas fa-volume-mute';
+        }
+
+        function playMessageSound() {
+            if (soundEnabled) {
+                const sound = document.getElementById('messageSound');
+                sound.play().catch(error => console.log('Error playing sound:', error));
+            }
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const fileName = file.name;
+                    const fileSize = (file.size / 1024).toFixed(2) + ' KB';
+                    sendFileMessage(fileName, fileSize);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function sendFileMessage(fileName, fileSize) {
+            const chatArea = document.getElementById('chatArea');
+            const fileMessage = document.createElement('div');
+            fileMessage.className = 'chat-message user';
+            fileMessage.innerHTML = `
+                <div class="chat-bubble user">
+                    📎 File: ${fileName}<br>
+                    Size: ${fileSize}
+                </div>
+                <div class="message-timestamp">${new Date().toLocaleTimeString()}</div>
+            `;
+            chatArea.appendChild(fileMessage);
+            chatArea.scrollTop = chatArea.scrollHeight;
+            playMessageSound();
+        }
+
+        function sendQuickReply(message) {
+            const chatInput = document.getElementById('chatInput');
+            chatInput.value = message;
+            sendMessage();
+        }
+
+        function addReaction(messageId, emoji) {
+            const message = document.getElementById(messageId);
+            const reactionsDiv = message.querySelector('.message-reactions');
+            const reactionBtn = document.createElement('button');
+            reactionBtn.className = 'reaction-btn';
+            reactionBtn.innerHTML = emoji;
+            reactionsDiv.appendChild(reactionBtn);
+        }
+
         // Function to toggle Calm Mode styles
         function toggleCalmMode() {
             const body = document.body;
